@@ -1,16 +1,16 @@
 # Discord bot frontend
 
-
 ## Features:
 
 - Login using Discord OAuth
-- Show all servers the bot and the logged in user is in
+- Show all servers the bot and the logged in user has access to. 
 - Stats:
-  - General bot stats (amount of servers, channels, messages, ...)
-  - When logged in; after selecting a server:
-    - Top stats (User with most messages last day/week, most used emote last day/week, most used channel on the server, ...)
-    - User stats (Messages per day, emotes per day, most used emote, ...)
+  - General bot stats (number of servers, channels, messages, ...)
+  - When logged in - after selecting a server:
+    - Show "top stats" - user with most messages last day/week, most used emote last day/week)
+    - After selecting a user from the server, the page will show individual stats for that user (Messages per day, emotes per day, most used emote, ...)
 - Visualisation:
-  - Bar graph showing total emote usage (last day, last week, last month)
-  - Line graph showing total message by user / with emote over time
+  - Bar graph showing total emote usage (last day, last week, last month) for individual emotes
+  - Line graph showing total number of messages by user over time
+  - Line graph showing emote usage over time
 
