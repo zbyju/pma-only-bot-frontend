@@ -1,17 +1,16 @@
 import express from 'express';
 
+//Route files
+import generalStatsRoute from './routes/stats/general';
+import serverStatsRoute from './routes/stats/server';
+
 const app = express();
 
 // Routes
 const apiPrefix = '/v1/';
 
-const generalStats = require('./routes/stats/general');
-const serverStats = require('./routes/stats/server');
-const userStats = require('./routes/stats/user');
-
-app.use(apiPrefix + 'stats/general', generalStats);
-app.use(apiPrefix + 'stats/server', serverStats);
-app.use(apiPrefix + 'stats/user', userStats);
+app.use(apiPrefix + 'stats/general', generalStatsRoute);
+app.use(apiPrefix + 'stats/server', serverStatsRoute);
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {

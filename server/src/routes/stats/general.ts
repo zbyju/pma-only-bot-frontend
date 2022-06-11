@@ -5,4 +5,4 @@ router.get('/', (req, res) => {
   res.send('Hello from general');
 });
 
-module.exports = router;
+export default router;
