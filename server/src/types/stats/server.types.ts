@@ -1,7 +1,4 @@
-export type ServerId = string;
-export type ChannelId = string;
-export type EmoteId = string;
-export type UserId = string;
+import { ChannelId, EmoteId, ServerId, UserId } from '../discord.types';
 
 export interface DayStats extends DayStatsHeaders {
   perUser: StatsPerUserPerDay[];
