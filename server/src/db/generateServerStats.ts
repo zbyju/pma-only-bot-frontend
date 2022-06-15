@@ -1,13 +1,19 @@
+import { ServerId } from '../types/discord.types';
 import {
   ChannelCount,
   DayStats,
   EmoteCount,
-  ServerId,
   ServerStatsPerDay,
   StatsPerChannel,
   StatsPerUserPerDay,
 } from '../types/stats/server.types';
+import { getArrayOfDatesFrom } from '../utils/dates';
 import { generateNRandomId, generateRandomId, generateRandomInt } from '../utils/random';
+
+export function generateDayStatsFrom(from: string, serverId: ServerId = generateRandomId()): DayStats[] {
+  const dates = getArrayOfDatesFrom(new Date(from));
+  return dates.map((d) => generateDayStats(d.toString(), serverId));
+}
 
 export function generateDayStats(date: string, serverId: ServerId = generateRandomId()): DayStats {
   return {
