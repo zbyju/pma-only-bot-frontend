@@ -10,7 +10,7 @@ export interface DayStats extends DayStatsHeaders {
 
 export interface DayStatsHeaders {
   serverId: ServerId;
-  date: Date;
+  date: string;
 }
 
 export interface ServerStatsPerDay {

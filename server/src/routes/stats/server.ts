@@ -1,15 +1,12 @@
 import express from 'express';
-
-// Route files
-import userRoute from './user';
+import { generateDayStats } from '../../db/generateServerStats';
 
 const router = express.Router();
 
-// Nested user route
-router.use('/:serverId/user', userRoute);
-
-router.get('/', (req, res) => {
-  res.send('Hello from server');
+router.get('/:serverId', (req, res) => {
+  if (req.params.serverId?.length === 0) return res.status(400).send('No server ID provided.');
+  const date = req.query.date?.toString() || new Date().toUTCString();
+  res.json(generateDayStats(date, req.params.serverId));
 });
 
 export default router;

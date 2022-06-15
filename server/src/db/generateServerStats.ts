@@ -9,7 +9,7 @@ import {
 } from '../types/stats/server.types';
 import { generateNRandomId, generateRandomId, generateRandomInt } from '../utils/random';
 
-export function generateDayStats(date: Date, serverId: ServerId = generateRandomId()): DayStats {
+export function generateDayStats(date: string, serverId: ServerId = generateRandomId()): DayStats {
   return {
     serverId,
     date,
