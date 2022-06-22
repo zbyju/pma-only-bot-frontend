@@ -1,6 +1,7 @@
 import express from 'express';
 import session from 'express-session';
 import passport from 'passport';
+import { userDb } from './db/users';
 import 'dotenv/config';
 require('./strategies/discord');
 
@@ -10,6 +11,9 @@ import serverStatsRoute from './routes/stats/server';
 import discordRoute from './routes/auth/discord';
 
 const app = express();
+
+// Database
+export const db = userDb();
 
 // Express Middleware
 app.use(express.json());
