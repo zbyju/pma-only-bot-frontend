@@ -7,7 +7,11 @@ router.get('/', passport.authenticate('discord'), (req, res) => {
 });
 
 router.get('/redirect', passport.authenticate('discord'), (req, res) => {
-  res.send({ msg: 'Success' });
+  return req.user
+    ? res.send(req.user)
+    : res.status(401).send({
+        msg: 'Unauthorized',
+      });
 });
 
 export default router;

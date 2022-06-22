@@ -29,15 +29,15 @@ app.use(
   }),
 );
 
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Routes
 const apiPrefix = '/api/v1';
 
 app.use(apiPrefix + '/stats/general', generalStatsRoute);
 app.use(apiPrefix + '/stats/server', serverStatsRoute);
 app.use(apiPrefix + '/auth/discord', discordRoute);
-
-app.use(passport.initialize());
-app.use(passport.session());
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
