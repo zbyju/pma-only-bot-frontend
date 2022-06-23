@@ -1,6 +1,7 @@
 module Page.Index exposing (Model, Msg, init, update, view)
 
 import Browser
+import Component.GeneralStats as GeneralStats
 import Component.Header as Header
 import Element
 import Element.Background
@@ -64,12 +65,26 @@ content =
             )
             (Element.text "Welcome to the dashboard of my Discord Bot!")
         , login True
+        , GeneralStats.view
         ]
 
 
 login : Bool -> Element.Element msg
 login _ =
-    Element.column [ Element.width Element.fill, Element.height Element.fill, Element.spacingXY 0 25 ]
-        [ Element.el [ Font.center, Element.centerX ] (Element.text "You can continue into the dashboard by logging in.")
-        , Element.link [ Element.centerX, Element.paddingXY 15 12, Element.Background.color Color.accentBackground ] { url = "http://localhost:3001/api/v1/auth/discord", label = Element.text "Login using Discord" }
+    Element.column
+        [ Element.width Element.fill
+        , Element.spacingXY 0 25
+        ]
+        [ Element.el
+            [ Font.center
+            , Element.centerX
+            ]
+            (Element.text "You can continue into the dashboard by logging in.")
+        , Element.link
+            [ Element.centerX
+            , Element.paddingXY 15 12
+            , Element.Background.color Color.accentBackground
+            , Border.rounded 10
+            ]
+            { url = "http://localhost:3001/api/v1/auth/discord", label = Element.text "Login using Discord" }
         ]

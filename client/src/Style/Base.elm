@@ -10,3 +10,17 @@ heading1 =
     [ Font.bold
     , Font.size 40
     ]
+
+
+heading2 : List (Element.Attribute msg)
+heading2 =
+    [ Font.bold
+    , Font.size 30
+    ]
+
+
+heading3 : List (Element.Attribute msg)
+heading3 =
+    [ Font.bold
+    , Font.size 25
+    ]
