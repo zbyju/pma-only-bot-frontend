@@ -10,12 +10,14 @@ import Url.Parser as Parser
 
 type Route
     = Index
+    | Server
 
 
 parser : Parser.Parser (Route -> a) a
 parser =
     Parser.oneOf
         [ Parser.map Index Parser.top
+        , Parser.map Server (Parser.s "server")
         ]
 
 
@@ -29,3 +31,6 @@ routeToString route =
     case route of
         Index ->
             "/"
+
+        Server ->
+            "/server/"

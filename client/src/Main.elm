@@ -6,6 +6,7 @@ import Flags
 import Html
 import Page.Index as Index
 import Page.NotFound as NotFound
+import Page.Server as Server
 import Route
 import Url
 
@@ -17,6 +18,7 @@ type Model
 
 type Page
     = Index Index.Model
+    | Server Server.Model
     | NotFound
 
 
@@ -53,11 +55,17 @@ routeToPage api route =
                 |> Index.init
                 |> Tuple.mapBoth Index (Cmd.map IndexMsg)
 
+        Route.Server ->
+            api
+                |> Server.init
+                |> Tuple.mapBoth Server (Cmd.map ServerMsg)
+
 
 type Msg
     = ChangedUrl Url.Url
     | ClickedLink Browser.UrlRequest
     | IndexMsg Index.Msg
+    | ServerMsg Server.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -106,6 +114,9 @@ pageView page =
 
         Index indexModel ->
             Index.view IndexMsg indexModel
+
+        Server serverModel ->
+            Server.view ServerMsg serverModel
 
 
 main : Program Flags.RawFlags Model Msg
