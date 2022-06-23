@@ -2,6 +2,7 @@ module Component.Header exposing (view)
 
 import Element
 import Element.Background as Background
+import Element.Border as Border
 import Element.Font as Font
 import Route
 import Simple.Transition as Transition
@@ -11,7 +12,7 @@ import Style.Color as Color
 view : Maybe Route.Route -> Element.Element msg
 view activeRoute =
     Element.el
-        [ Element.width Element.fill, Background.color (Element.rgb255 0 0 0) ]
+        [ Element.width Element.fill, Background.color (Element.rgb255 0 0 0), Border.shadow { offset = ( 0, -10 ), size = 0.01, blur = 50, color = Element.rgb255 150 150 150 } ]
         (Element.row
             [ Element.paddingXY 100 0, Element.centerY, Element.spaceEvenly ]
             (List.map

@@ -4,8 +4,13 @@ import Browser
 import Component.Header as Header
 import Element
 import Element.Background
+import Element.Border as Border
 import Element.Font as Font
+import Element.Input as Input
+import List exposing (concat)
 import Route
+import Simple.Transition exposing (backgroundColor)
+import Style.Base as Base
 import Style.Color as Color
 
 
@@ -47,4 +52,24 @@ header =
 
 content : Element.Element msg
 content =
-    Element.text "Index"
+    Element.column [ Element.width Element.fill, Element.height Element.fill ]
+        [ Element.el
+            (concat
+                [ Base.heading1
+                , [ Font.center
+                  , Element.centerX
+                  , Element.paddingXY 0 150
+                  ]
+                ]
+            )
+            (Element.text "Welcome to the dashboard of my Discord Bot!")
+        , login True
+        ]
+
+
+login : Bool -> Element.Element msg
+login _ =
+    Element.column [ Element.width Element.fill, Element.height Element.fill, Element.spacingXY 0 25 ]
+        [ Element.el [ Font.center, Element.centerX ] (Element.text "You can continue into the dashboard by logging in.")
+        , Element.link [ Element.centerX, Element.paddingXY 15 12, Element.Background.color Color.accentBackground ] { url = "http://localhost:3001/api/v1/auth/discord", label = Element.text "Login using Discord" }
+        ]
