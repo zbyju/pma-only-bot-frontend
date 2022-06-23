@@ -16,13 +16,13 @@ import Style.Color as Color
 
 
 type alias Model =
-    { isLoggedIn : Bool
+    { serverId : String
     }
 
 
 init : String -> ( Model, Cmd Msg )
-init _ =
-    ( { isLoggedIn = False }
+init serverId =
+    ( { serverId = serverId }
     , Cmd.none
     )
 
@@ -42,13 +42,23 @@ view : (Msg -> msg) -> Model -> Browser.Document msg
 view wrapMsg model =
     { title = "Server Page"
     , body =
-        [ Element.layout [ Element.Background.color Color.primaryBackground, Font.color Color.primaryColor ] <| Element.column [ Element.width Element.fill, Element.height Element.fill ] [ header, content ] ]
+        [ Element.layout
+            [ Element.Background.color Color.primaryBackground
+            , Font.color Color.primaryColor
+            ]
+          <|
+            Element.column
+                [ Element.width Element.fill
+                , Element.height Element.fill
+                ]
+                [ header model.serverId, content ]
+        ]
     }
 
 
-header : Element.Element msg
-header =
-    Header.view (Just Route.Index)
+header : String -> Element.Element msg
+header serverId =
+    Header.view (Just <| Route.Server serverId)
 
 
 content : Element.Element msg

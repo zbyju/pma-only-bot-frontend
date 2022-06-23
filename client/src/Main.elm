@@ -55,8 +55,8 @@ routeToPage api route =
                 |> Index.init
                 |> Tuple.mapBoth Index (Cmd.map IndexMsg)
 
-        Route.Server ->
-            api
+        Route.Server serverId ->
+            serverId
                 |> Server.init
                 |> Tuple.mapBoth Server (Cmd.map ServerMsg)
 

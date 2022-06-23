@@ -1,7 +1,7 @@
 module Route exposing (Route(..), fromUrl, routeToString)
 
 import Url
-import Url.Parser as Parser
+import Url.Parser as Parser exposing ((</>))
 
 
 
@@ -10,14 +10,14 @@ import Url.Parser as Parser
 
 type Route
     = Index
-    | Server
+    | Server String
 
 
 parser : Parser.Parser (Route -> a) a
 parser =
     Parser.oneOf
         [ Parser.map Index Parser.top
-        , Parser.map Server (Parser.s "server")
+        , Parser.map Server <| Parser.s "server" </> Parser.string
         ]
 
 
@@ -32,5 +32,5 @@ routeToString route =
         Index ->
             "/"
 
-        Server ->
-            "/server/"
+        Server serverId ->
+            "/server/" ++ serverId
