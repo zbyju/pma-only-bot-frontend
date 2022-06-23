@@ -2,8 +2,6 @@ module Main exposing (..)
 
 import Browser
 import Browser.Navigation as Navigation
-import Component.Header as Header
-import Element
 import Flags
 import Html
 import Page.Index as Index

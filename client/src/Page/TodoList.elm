@@ -3,15 +3,11 @@ module Page.TodoList exposing (Model, Msg, init, update, view)
 import Browser
 import Component.Header as Header
 import Element
-import Html
-import Html.Attributes as Attributes
-import Html.Events as Events
 import Http
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
 import Json.Encode as Encode
 import Route
-import Styles
 
 
 type alias Model =
