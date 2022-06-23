@@ -36,5 +36,4 @@ navLinkView route name _ =
 routeList : List ( Route.Route, String )
 routeList =
     [ ( Route.Index, "Home" )
-    , ( Route.TodoList, "TodoList" )
     ]

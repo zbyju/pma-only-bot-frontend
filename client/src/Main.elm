@@ -6,7 +6,6 @@ import Flags
 import Html
 import Page.Index as Index
 import Page.NotFound as NotFound
-import Page.TodoList as TodoList
 import Route
 import Url
 
@@ -18,7 +17,6 @@ type Model
 
 type Page
     = Index Index.Model
-    | TodoList TodoList.Model
     | NotFound
 
 
@@ -50,11 +48,6 @@ urlToPage api =
 routeToPage : String -> Route.Route -> ( Page, Cmd Msg )
 routeToPage api route =
     case route of
-        Route.TodoList ->
-            api
-                |> TodoList.init
-                |> Tuple.mapBoth TodoList (Cmd.map TodoListMsg)
-
         Route.Index ->
             api
                 |> Index.init
@@ -64,7 +57,6 @@ routeToPage api route =
 type Msg
     = ChangedUrl Url.Url
     | ClickedLink Browser.UrlRequest
-    | TodoListMsg TodoList.Msg
     | IndexMsg Index.Msg
 
 
@@ -87,11 +79,6 @@ update msg model =
             url
                 |> urlToPage api
                 |> Tuple.mapFirst (AppInitialized key api)
-
-        ( TodoListMsg todoListMsg, AppInitialized key api (TodoList todoListModel) ) ->
-            todoListModel
-                |> TodoList.update api todoListMsg
-                |> Tuple.mapBoth (TodoList >> AppInitialized key api) (Cmd.map TodoListMsg)
 
         _ ->
             ( model
@@ -116,9 +103,6 @@ pageView page =
     case page of
         NotFound ->
             NotFound.view
-
-        TodoList todoListModel ->
-            TodoList.view TodoListMsg todoListModel
 
         Index indexModel ->
             Index.view IndexMsg indexModel

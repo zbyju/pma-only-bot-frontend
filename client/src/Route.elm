@@ -9,15 +9,13 @@ import Url.Parser as Parser
 
 
 type Route
-    = TodoList
-    | Index
+    = Index
 
 
 parser : Parser.Parser (Route -> a) a
 parser =
     Parser.oneOf
-        [ Parser.map TodoList (Parser.s "todo-list")
-        , Parser.map Index Parser.top
+        [ Parser.map Index Parser.top
         ]
 
 
@@ -29,8 +27,5 @@ fromUrl =
 routeToString : Route -> String
 routeToString route =
     case route of
-        TodoList ->
-            "/todo-list"
-
         Index ->
             "/"
