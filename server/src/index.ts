@@ -3,6 +3,7 @@ import session from 'express-session';
 import passport from 'passport';
 import { userDb } from './db/users';
 import 'dotenv/config';
+import cors from 'cors';
 require('./strategies/discord');
 
 //Route files
@@ -28,6 +29,7 @@ app.use(
     },
   }),
 );
+app.use(cors());
 
 app.use(passport.initialize());
 app.use(passport.session());
