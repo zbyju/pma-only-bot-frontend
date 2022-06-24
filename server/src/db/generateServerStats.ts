@@ -1,4 +1,4 @@
-import { ServerId } from '../types/discord.types';
+import { Channel, ServerId } from '../types/discord.types';
 import {
   ChannelCount,
   DayStats,
@@ -9,6 +9,13 @@ import {
 } from '../types/stats/server.types';
 import { getArrayOfDatesFrom } from '../utils/dates';
 import { generateNRandomId, generateRandomId, generateRandomInt } from '../utils/random';
+import { servers } from './discord';
+import {
+  generateRandomChannels,
+  generateRandomEmotes,
+  generateRandomUsers,
+  getRandomFromArray,
+} from './generateDiscord';
 
 export function generateDayStatsFrom(from: string, serverId: ServerId = generateRandomId()): DayStats[] {
   const dates = getArrayOfDatesFrom(new Date(from));
@@ -16,21 +23,25 @@ export function generateDayStatsFrom(from: string, serverId: ServerId = generate
 }
 
 export function generateDayStats(date: string, serverId: ServerId = generateRandomId()): DayStats {
+  const randomServer = getRandomFromArray(servers);
   return {
-    serverId,
+    server: {
+      serverId,
+      name: randomServer.name,
+    },
     date,
     perUser: generateStatsPerUserPerDay(),
-    server: generateServerStatsPerDay(),
+    serverStats: generateServerStatsPerDay(),
   };
 }
 
 export function generateServerStatsPerDay(): ServerStatsPerDay {
   let count = 0;
-  const perChannel: StatsPerChannel[] = generateNRandomId(generateRandomInt(1, 5)).map((channelId) => {
+  const perChannel: StatsPerChannel[] = generateRandomChannels().map((channel) => {
     const c = generateRandomInt(10, 1000);
     count += c;
     return {
-      channelId,
+      channel,
       count: c,
     };
   });
@@ -41,9 +52,9 @@ export function generateServerStatsPerDay(): ServerStatsPerDay {
 }
 
 export function generateStatsPerUserPerDay(): StatsPerUserPerDay[] {
-  const users = generateNRandomId(generateRandomInt(2, 10)).map((u) => {
+  const users = generateRandomUsers().map((user) => {
     return {
-      user: u,
+      user,
       emotes: generateEmoteCount(),
       channels: generateChannelCount(),
     };
@@ -52,18 +63,18 @@ export function generateStatsPerUserPerDay(): StatsPerUserPerDay[] {
 }
 
 export function generateEmoteCount(): EmoteCount[] {
-  return generateNRandomId(generateRandomInt(1, 25)).map((emoteId) => {
+  return generateRandomEmotes().map((emote) => {
     return {
-      emoteId,
+      emote,
       count: generateRandomInt(1, 200),
     };
   });
 }
 
 export function generateChannelCount(): ChannelCount[] {
-  return generateNRandomId(generateRandomInt(1, 25)).map((channelId) => {
+  return generateRandomChannels().map((channel) => {
     return {
-      channelId,
+      channel,
       count: generateRandomInt(1, 200),
     };
   });

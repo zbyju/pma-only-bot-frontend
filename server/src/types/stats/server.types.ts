@@ -1,12 +1,12 @@
-import { ChannelId, EmoteId, ServerId, UserId } from '../discord.types';
+import { Channel, ChannelId, Emote, Server, User } from '../discord.types';
 
 export interface DayStats extends DayStatsHeaders {
   perUser: StatsPerUserPerDay[];
-  server: ServerStatsPerDay;
+  serverStats: ServerStatsPerDay;
 }
 
 export interface DayStatsHeaders {
-  serverId: ServerId;
+  server: Server;
   date: string;
 }
 
@@ -16,22 +16,22 @@ export interface ServerStatsPerDay {
 }
 
 export interface StatsPerChannel {
-  channelId: ChannelId;
+  channel: Channel;
   count: number;
 }
 
 export interface StatsPerUserPerDay {
-  user: UserId;
+  user: User;
   emotes: EmoteCount[];
   channels: ChannelCount[];
 }
 
 export interface EmoteCount {
-  emoteId: EmoteId;
+  emote: Emote;
   count: number;
 }
 
 export interface ChannelCount {
-  channelId: ChannelId;
+  channel: Channel;
   count: number;
 }

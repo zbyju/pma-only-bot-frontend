@@ -13,3 +13,18 @@ export function generateRandomId(): string {
 export function generateNRandomId(n: number): string[] {
   return Array.from({ length: 40 }, generateRandomId);
 }
+
+// Credit to: https://stackoverflow.com/questions/2450954/how-to-randomize-shuffle-a-javascript-array
+export function shuffleArray<T>(array: T[]): T[] {
+  let currentIndex = array.length;
+  let randomIndex: number;
+
+  while (currentIndex != 0) {
+    randomIndex = Math.floor(Math.random() * currentIndex);
+    currentIndex--;
+
+    [array[currentIndex], array[randomIndex]] = [array[randomIndex], array[currentIndex]];
+  }
+
+  return array;
+}
