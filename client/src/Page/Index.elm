@@ -157,10 +157,22 @@ generalStatsView : GeneralStatsState -> Element.Element msg
 generalStatsView generalStatsState =
     case generalStatsState of
         LoadingGeneralStats ->
-            Element.el [] <| Element.text "Loading general stats..."
+            Element.el
+                [ Font.center
+                , Element.centerX
+                , Element.paddingXY 0 100
+                ]
+            <|
+                Element.text "Loading general stats..."
 
         ErrorGeneralStats errorMessage ->
-            Element.el [] <| Element.text errorMessage
+            Element.el
+                [ Font.center
+                , Element.centerX
+                , Element.paddingXY 0 100
+                ]
+            <|
+                Element.text errorMessage
 
         SuccessGeneralStats generalStats ->
             Element.column
