@@ -16,13 +16,13 @@ import Route
 import Style.Base as Base
 import Style.Color as Color
 import Url
-import Utils.Stats.General as General
+import Utils.GeneralStats as GS
 
 
 type GeneralStatsState
     = LoadingGeneralStats
     | ErrorGeneralStats String
-    | SuccessGeneralStats General.GeneralStats
+    | SuccessGeneralStats GS.GeneralStats
 
 
 type alias Model =
@@ -33,7 +33,7 @@ type alias Model =
 
 
 type Msg
-    = GotGeneralStats (Result Http.Error General.GeneralStats)
+    = GotGeneralStats (Result Http.Error GS.GeneralStats)
 
 
 getGeneralStats : String -> Cmd Msg
@@ -44,14 +44,14 @@ getGeneralStats apiOrigin =
         }
 
 
-decodeGeneralStats : Decode.Decoder General.GeneralStats
+decodeGeneralStats : Decode.Decoder GS.GeneralStats
 decodeGeneralStats =
-    Decode.map General.GeneralStats (Decode.field "counts" decodeGeneralStatsCounts)
+    Decode.map GS.GeneralStats (Decode.field "counts" decodeGeneralStatsCounts)
 
 
-decodeGeneralStatsCounts : Decode.Decoder General.GeneralStatsCounts
+decodeGeneralStatsCounts : Decode.Decoder GS.GeneralStatsCounts
 decodeGeneralStatsCounts =
-    Decode.succeed General.GeneralStatsCounts
+    Decode.succeed GS.GeneralStatsCounts
         |> Pipeline.required "servers" Decode.int
         |> Pipeline.required "channels" Decode.int
         |> Pipeline.required "users" Decode.int

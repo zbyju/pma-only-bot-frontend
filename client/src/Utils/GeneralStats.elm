@@ -1,4 +1,4 @@
-module Utils.Stats.General exposing (..)
+module Utils.GeneralStats exposing (..)
 
 
 type alias GeneralStats =

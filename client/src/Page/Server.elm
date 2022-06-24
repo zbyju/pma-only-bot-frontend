@@ -9,6 +9,13 @@ import List exposing (concat)
 import Route
 import Style.Base as Base
 import Style.Color as Color
+import Utils.ServerStats as SS
+
+
+type ServerStatsState
+    = LoadingServerStats
+    | ErrorServerStats String
+    | Success SS.ServerStats
 
 
 type alias Model =
