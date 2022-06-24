@@ -1,16 +1,12 @@
 module Page.Server exposing (Model, Msg, init, update, view)
 
 import Browser
-import Component.GeneralStats as GeneralStats
 import Component.Header as Header
 import Element
 import Element.Background
-import Element.Border as Border
 import Element.Font as Font
-import Element.Input as Input
 import List exposing (concat)
 import Route
-import Simple.Transition exposing (backgroundColor)
 import Style.Base as Base
 import Style.Color as Color
 

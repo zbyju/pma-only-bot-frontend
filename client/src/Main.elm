@@ -88,6 +88,11 @@ update msg model =
                 |> urlToPage api
                 |> Tuple.mapFirst (AppInitialized key api)
 
+        ( IndexMsg todoListMsg, AppInitialized key api (Index indexModel) ) ->
+            indexModel
+                |> Index.update todoListMsg
+                |> Tuple.mapBoth (Index >> AppInitialized key api) (Cmd.map IndexMsg)
+
         _ ->
             ( model
             , Cmd.none

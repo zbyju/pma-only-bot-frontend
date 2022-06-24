@@ -1,48 +1,111 @@
 module Page.Index exposing (Model, Msg, init, update, view)
 
 import Browser
-import Component.GeneralStats as GeneralStats
 import Component.Header as Header
+import Component.StatTile as StatTile
 import Element
 import Element.Background
 import Element.Border as Border
 import Element.Font as Font
-import Element.Input as Input
+import Html
+import Http
+import Json.Decode as Decode
+import Json.Decode.Pipeline as Pipeline
 import List exposing (concat)
 import Route
-import Simple.Transition exposing (backgroundColor)
 import Style.Base as Base
 import Style.Color as Color
+import Url
+import Utils.Stats.General as General
+
+
+type GeneralStatsState
+    = LoadingGeneralStats
+    | ErrorGeneralStats String
+    | SuccessGeneralStats General.GeneralStats
 
 
 type alias Model =
-    { isLoggedIn : Bool
+    { apiOrigin : String
+    , isLoggedIn : Bool
+    , generalStatsState : GeneralStatsState
     }
 
 
+type Msg
+    = GotGeneralStats (Result Http.Error General.GeneralStats)
+
+
+getGeneralStats : String -> Cmd Msg
+getGeneralStats apiOrigin =
+    Http.get
+        { url = apiOrigin ++ "stats/general"
+        , expect = Http.expectJson GotGeneralStats decodeGeneralStats
+        }
+
+
+decodeGeneralStats : Decode.Decoder General.GeneralStats
+decodeGeneralStats =
+    Decode.map General.GeneralStats (Decode.field "counts" decodeGeneralStatsCounts)
+
+
+decodeGeneralStatsCounts : Decode.Decoder General.GeneralStatsCounts
+decodeGeneralStatsCounts =
+    Decode.succeed General.GeneralStatsCounts
+        |> Pipeline.required "servers" Decode.int
+        |> Pipeline.required "channels" Decode.int
+        |> Pipeline.required "users" Decode.int
+        |> Pipeline.required "messages" Decode.int
+        |> Pipeline.required "emotes" Decode.int
+
+
 init : String -> ( Model, Cmd Msg )
-init _ =
-    ( { isLoggedIn = False }
-    , Cmd.none
+init apiOrigin =
+    ( { apiOrigin = apiOrigin
+      , isLoggedIn = False
+      , generalStatsState = LoadingGeneralStats
+      }
+    , getGeneralStats apiOrigin
     )
 
 
-type Msg
-    = ClickedLogin
-
-
-update : String -> Msg -> Model -> ( Model, Cmd Msg )
-update api msg model =
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
     case msg of
-        ClickedLogin ->
-            ( model, Cmd.none )
+        GotGeneralStats result ->
+            case result of
+                Err _ ->
+                    ( { model
+                        | generalStatsState = ErrorGeneralStats "There has been an error when fetching general statistics."
+                      }
+                    , Cmd.none
+                    )
+
+                Ok generalStats ->
+                    ( { model
+                        | generalStatsState = SuccessGeneralStats generalStats
+                      }
+                    , Cmd.none
+                    )
 
 
 view : (Msg -> msg) -> Model -> Browser.Document msg
 view wrapMsg model =
     { title = "Index Page"
     , body =
-        [ Element.layout [ Element.Background.color Color.primaryBackground, Font.color Color.primaryColor ] <| Element.column [ Element.width Element.fill, Element.height Element.fill ] [ header, content ] ]
+        [ Element.layout
+            [ Element.Background.color Color.primaryBackground
+            , Font.color Color.primaryColor
+            ]
+          <|
+            Element.column
+                [ Element.width Element.fill
+                , Element.height Element.fill
+                ]
+                [ header
+                , Element.map wrapMsg <| content model
+                ]
+        ]
     }
 
 
@@ -51,8 +114,8 @@ header =
     Header.view (Just Route.Index)
 
 
-content : Element.Element msg
-content =
+content : Model -> Element.Element msg
+content model =
     Element.column [ Element.width Element.fill, Element.height Element.fill ]
         [ Element.el
             (concat
@@ -64,13 +127,13 @@ content =
                 ]
             )
             (Element.text "Welcome to the dashboard of my Discord Bot!")
-        , login True
-        , GeneralStats.view
+        , loginView True
+        , generalStatsView model.generalStatsState
         ]
 
 
-login : Bool -> Element.Element msg
-login _ =
+loginView : Bool -> Element.Element msg
+loginView _ =
     Element.column
         [ Element.width Element.fill
         , Element.spacingXY 0 25
@@ -88,3 +151,30 @@ login _ =
             ]
             { url = "http://localhost:3001/api/v1/auth/discord", label = Element.text "Login using Discord" }
         ]
+
+
+generalStatsView : GeneralStatsState -> Element.Element msg
+generalStatsView generalStatsState =
+    case generalStatsState of
+        LoadingGeneralStats ->
+            Element.el [] <| Element.text "Loading general stats..."
+
+        ErrorGeneralStats errorMessage ->
+            Element.el [] <| Element.text errorMessage
+
+        SuccessGeneralStats generalStats ->
+            Element.column
+                [ Element.width Element.fill
+                , Element.centerX
+                , Element.paddingEach { top = 100, left = 0, right = 0, bottom = 20 }
+                , Element.spacingXY 0 20
+                ]
+                [ Element.el (List.concat [ Base.heading2, [ Element.centerX ] ]) (Element.text "General stats")
+                , Element.wrappedRow [ Element.centerX, Element.spacingXY 10 0 ]
+                    [ StatTile.view "#Servers" <| toFloat generalStats.counts.servers
+                    , StatTile.view "#Channels" <| toFloat generalStats.counts.channels
+                    , StatTile.view "#Users" <| toFloat generalStats.counts.users
+                    , StatTile.view "#Messages" <| toFloat generalStats.counts.messages
+                    , StatTile.view "#Emotes" <| toFloat generalStats.counts.emotes
+                    ]
+                ]
