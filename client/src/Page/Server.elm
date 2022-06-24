@@ -12,13 +12,14 @@ import Style.Color as Color
 
 
 type alias Model =
-    { serverId : String
+    { apiOrigin : String
+    , serverId : String
     }
 
 
-init : String -> ( Model, Cmd Msg )
-init serverId =
-    ( { serverId = serverId }
+init : ( String, String ) -> ( Model, Cmd Msg )
+init ( api, serverId ) =
+    ( { serverId = serverId, apiOrigin = api }
     , Cmd.none
     )
 
@@ -27,8 +28,8 @@ type Msg
     = ClickedLogin
 
 
-update : String -> Msg -> Model -> ( Model, Cmd Msg )
-update api msg model =
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg model =
     case msg of
         ClickedLogin ->
             ( model, Cmd.none )
@@ -69,5 +70,5 @@ content =
                   ]
                 ]
             )
-            (Element.text "Server stats")
+            (Element.text "Server")
         ]

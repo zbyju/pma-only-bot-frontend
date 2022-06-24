@@ -56,7 +56,7 @@ routeToPage api route =
                 |> Tuple.mapBoth Index (Cmd.map IndexMsg)
 
         Route.Server serverId ->
-            serverId
+            ( api, serverId )
                 |> Server.init
                 |> Tuple.mapBoth Server (Cmd.map ServerMsg)
 
@@ -88,10 +88,15 @@ update msg model =
                 |> urlToPage api
                 |> Tuple.mapFirst (AppInitialized key api)
 
-        ( IndexMsg todoListMsg, AppInitialized key api (Index indexModel) ) ->
+        ( IndexMsg indexMsg, AppInitialized key api (Index indexModel) ) ->
             indexModel
-                |> Index.update todoListMsg
+                |> Index.update indexMsg
                 |> Tuple.mapBoth (Index >> AppInitialized key api) (Cmd.map IndexMsg)
+
+        ( ServerMsg serverMsg, AppInitialized key api (Server serverModel) ) ->
+            serverModel
+                |> Server.update serverMsg
+                |> Tuple.mapBoth (Server >> AppInitialized key api) (Cmd.map ServerMsg)
 
         _ ->
             ( model
