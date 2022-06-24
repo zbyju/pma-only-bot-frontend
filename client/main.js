@@ -5,6 +5,6 @@ const root = document.querySelector("#app div");
 const app = Elm.Main.init({
     node: root,
     flags: {
-        baseApiUrl: "http://localhost:3001/",
+        baseApiUrl: "http://localhost:3001/api/v1/",
     }
 });
