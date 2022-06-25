@@ -16,6 +16,7 @@ import Route
 import Style.Base as Base
 import Style.Color as Color
 import Url
+import Utils.Decode.GeneralStatsDecoder as GSDecode
 import Utils.GeneralStats as GS
 
 
@@ -40,23 +41,8 @@ getGeneralStats : String -> Cmd Msg
 getGeneralStats apiOrigin =
     Http.get
         { url = apiOrigin ++ "stats/general"
-        , expect = Http.expectJson GotGeneralStats decodeGeneralStats
+        , expect = Http.expectJson GotGeneralStats GSDecode.decodeGeneralStats
         }
-
-
-decodeGeneralStats : Decode.Decoder GS.GeneralStats
-decodeGeneralStats =
-    Decode.map GS.GeneralStats (Decode.field "counts" decodeGeneralStatsCounts)
-
-
-decodeGeneralStatsCounts : Decode.Decoder GS.GeneralStatsCounts
-decodeGeneralStatsCounts =
-    Decode.succeed GS.GeneralStatsCounts
-        |> Pipeline.required "servers" Decode.int
-        |> Pipeline.required "channels" Decode.int
-        |> Pipeline.required "users" Decode.int
-        |> Pipeline.required "messages" Decode.int
-        |> Pipeline.required "emotes" Decode.int
 
 
 init : String -> ( Model, Cmd Msg )
