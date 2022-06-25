@@ -1,5 +1,9 @@
 import { Channel, ChannelId, Emote, Server, User } from '../discord.types';
 
+export interface ServerStats {
+  stats: DayStats[]
+}
+
 export interface DayStats extends DayStatsHeaders {
   perUser: StatsPerUserPerDay[];
   serverStats: ServerStatsPerDay;
