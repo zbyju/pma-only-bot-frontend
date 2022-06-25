@@ -6,7 +6,7 @@ import Element.Background as Background
 
 linkColor : Element.Color
 linkColor =
-    Element.rgb255 132 124 252
+    Element.rgb255 123 77 255
 
 
 primaryBackground : Element.Color
@@ -21,17 +21,17 @@ primaryColor =
 
 accentBackground : Element.Color
 accentBackground =
-    Element.rgb255 132 124 252
+    Element.rgb255 123 77 255
 
 
 accent2Background : Element.Color
 accent2Background =
-    Element.rgb255 122 114 242
+    Element.rgb255 130 87 255
 
 
 highlightBackground : Element.Color
 highlightBackground =
-    Element.rgb255 250 255 0
+    Element.rgb255 234 96 223
 
 
 highlightColor : Element.Color
@@ -41,7 +41,7 @@ highlightColor =
 
 highlight2Background : Element.Color
 highlight2Background =
-    Element.rgb255 240 245 0
+    Element.rgb255 232 102 222
 
 
 accentGradient : Element.Attr decorative msg
