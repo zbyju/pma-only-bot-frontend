@@ -16,7 +16,7 @@ import List exposing (concat)
 import Route
 import Style.Base as Base
 import Style.Color as Color
-import Utils.CalculateStats as CS
+import Utils.CalculateEmoteStats as CES
 import Utils.Decode.ServerStatsDecoder as SSDecode
 import Utils.ServerStats as SS
 
@@ -134,6 +134,8 @@ content model =
                 [ VerticalSpace.view 0
                 , serverStatsView serverStats
                 , emoteUsageView serverStats
+                , userMessageNumberView serverStats
+                , VerticalSpace.view 50
                 ]
 
 
@@ -146,6 +148,24 @@ serverStatsView serverStats =
 
 topStatsLastDayView : SS.ServerStats -> Element.Element msg
 topStatsLastDayView serverStats =
+    let
+        emoteUsageStats =
+            CES.calculateEmoteUsagePeriods serverStats
+
+        topEmoteLastWeek =
+            List.head <| List.reverse <| List.sortBy (\e -> e.countLastWeek) emoteUsageStats
+
+        statTileTopEmoteLastWeek =
+            case topEmoteLastWeek of
+                Nothing ->
+                    StatTile.view "Top emote last week" (StatTile.StringStatTile "No emotes used")
+
+                Just topEmote ->
+                    StatTile.view "Top emote last week" (StatTile.UrlStatTile topEmote.emote.url topEmote.emote.name)
+
+        topEmoteLastDay =
+            List.head <| List.reverse <| List.sortBy (\e -> e.countLastDay) emoteUsageStats
+    in
     Element.column
         [ Element.width Element.fill
         , Element.height Element.fill
@@ -155,10 +175,8 @@ topStatsLastDayView serverStats =
         , Element.wrappedRow [ Element.centerX, Element.spacingXY 10 0 ]
             [ StatTile.view "Top user last day" (StatTile.IntStatTile 10)
             , StatTile.view "Top user last week" (StatTile.IntStatTile 10)
-            , StatTile.view "Top emote last day" (StatTile.IntStatTile 0)
+            , statTileTopEmoteLastWeek
             , StatTile.view "Top emote last week" (StatTile.IntStatTile 0)
-            , StatTile.view "Top channel last day" (StatTile.IntStatTile 0)
-            , StatTile.view "Top channel last week" (StatTile.IntStatTile 0)
             ]
         ]
 
@@ -178,22 +196,22 @@ emoteUsageView serverStats =
             ]
           <|
             Element.html <|
-                chart serverStats
+                emoteUsageBarChart serverStats
         ]
 
 
-chart : SS.ServerStats -> Html.Html msg
-chart stats =
+emoteUsageBarChart : SS.ServerStats -> Html.Html msg
+emoteUsageBarChart stats =
     let
         emoteUsageStats =
-            CS.calculateEmoteUsagePeriods stats
+            CES.calculateEmoteUsagePeriods stats
     in
     C.chart
         [ CA.width 1200
         , CA.height 300
         ]
         [ C.yLabels []
-        , C.binLabels .name [ CA.moveDown 20 ]
+        , C.binLabels (\x -> x.emote.name) [ CA.moveDown 20 ]
         , C.legendsAt .max
             .max
             [ CA.column
@@ -211,4 +229,23 @@ chart stats =
                 ]
             ]
             emoteUsageStats
+        ]
+
+
+userMessageNumberView : SS.ServerStats -> Element.Element msg
+userMessageNumberView serverStats =
+    Element.column
+        [ Element.width Element.fill
+        , Element.height Element.fill
+        , Element.spacingXY 0 50
+        ]
+        [ Element.el (concat [ Base.heading1, [ Element.centerX, Font.center ] ]) (Element.text "Number of messages by users")
+        , Element.el
+            [ Element.width <| Element.px 1200
+            , Element.height <| Element.px 300
+            , Element.centerX
+            ]
+          <|
+            Element.html <|
+                emoteUsageBarChart serverStats
         ]

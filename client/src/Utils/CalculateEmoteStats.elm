@@ -1,4 +1,4 @@
-module Utils.CalculateStats exposing (..)
+module Utils.CalculateEmoteStats exposing (..)
 
 import List.Extra as LE
 import Utils.ServerStats as SS
@@ -9,7 +9,7 @@ type alias EmotesUsagePeriods =
 
 
 type alias EmoteUsagePeriods =
-    { name : String
+    { emote : SS.Emote
     , countLastWeek : Float
     , countLastDay : Float
     }
@@ -20,47 +20,35 @@ type alias EmotesUsage =
 
 
 type alias EmoteUsage =
-    { name : String, count : Float }
+    { emote : SS.Emote, count : Float }
 
 
 calculateEmoteUsagePeriods : SS.ServerStats -> EmotesUsagePeriods
 calculateEmoteUsagePeriods serverStats =
     let
         statsLastWeek =
-            List.sortBy .name <| calculateEmoteUsageLastWeek serverStats
-
-        _ =
-            Debug.log "week" statsLastWeek
+            List.sortBy (\e -> e.emote.name) <| calculateEmoteUsageLastWeek serverStats
 
         statsLastDay =
-            List.sortBy .name <| calculateEmoteUsageLastDay serverStats
-
-        _ =
-            Debug.log "wtf" statsLastDay
+            List.sortBy (\e -> e.emote.name) <| calculateEmoteUsageLastDay serverStats
 
         zippedStats =
             LE.zip statsLastWeek statsLastDay
-
-        _ =
-            Debug.log "wtf" zippedStats
 
         statsPeriods =
             zippedStats
                 |> List.map
                     (\( lastWeek, lastDay ) ->
-                        { name = lastWeek.name
+                        { emote = lastWeek.emote
                         , countLastWeek = lastWeek.count
                         , countLastDay = lastDay.count
                         }
                     )
-
-        _ =
-            Debug.log "final" statsPeriods
     in
     zippedStats
         |> List.map
             (\( lastWeek, lastDay ) ->
-                { name = lastWeek.name
+                { emote = lastWeek.emote
                 , countLastWeek = lastWeek.count
                 , countLastDay = lastDay.count
                 }
@@ -92,25 +80,21 @@ calculateEmoteUsageLastDay serverStats =
 reduceEmoteUsage : EmotesUsage -> EmotesUsage
 reduceEmoteUsage emotesUsage =
     let
-        emoteNames =
+        emoteDistinct =
             emotesUsage
-                |> List.map .name
-                |> LE.unique
-
-        _ =
-            Debug.log "test" emoteNames
+                |> LE.uniqueBy (\e -> e.emote.name)
     in
-    emoteNames
+    emoteDistinct
         |> List.map
-            (\n ->
+            (\emote ->
                 let
                     emoteCount =
                         emotesUsage
-                            |> List.filter (\emote -> emote.name == n)
+                            |> List.filter (\e -> e.emote.name == emote.emote.name)
                             |> List.map .count
                             |> List.sum
                 in
-                { name = n, count = emoteCount }
+                { emote = emote.emote, count = emoteCount }
             )
 
 
@@ -131,7 +115,7 @@ calculateEmoteUsagePerDay day =
 
 calculateUserEmoteUsage : SS.StatsPerUserPerDay -> EmotesUsage
 calculateUserEmoteUsage userUsage =
-    List.map (\e -> { name = e.emote.name, count = toFloat e.count }) userUsage.emotes
+    List.map (\e -> { emote = e.emote, count = toFloat e.count }) userUsage.emotes
 
 
 flatten : List (List a) -> List a
