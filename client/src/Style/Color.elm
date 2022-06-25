@@ -36,7 +36,7 @@ highlightBackground =
 
 highlightColor : Element.Color
 highlightColor =
-    Element.rgb255 0 0 0
+    Element.rgb255 255 255 255
 
 
 highlight2Background : Element.Color
