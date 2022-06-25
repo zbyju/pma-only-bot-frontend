@@ -165,6 +165,14 @@ topStatsLastDayView serverStats =
 
         topEmoteLastDay =
             List.head <| List.reverse <| List.sortBy (\e -> e.countLastDay) emoteUsageStats
+
+        statTileTopEmoteLastDay =
+            case topEmoteLastDay of
+                Nothing ->
+                    StatTile.view "Top emote last day" (StatTile.StringStatTile "No emotes used")
+
+                Just topEmote ->
+                    StatTile.view "Top emote last day" (StatTile.UrlStatTile topEmote.emote.url topEmote.emote.name)
     in
     Element.column
         [ Element.width Element.fill
@@ -176,7 +184,7 @@ topStatsLastDayView serverStats =
             [ StatTile.view "Top user last day" (StatTile.IntStatTile 10)
             , StatTile.view "Top user last week" (StatTile.IntStatTile 10)
             , statTileTopEmoteLastWeek
-            , StatTile.view "Top emote last week" (StatTile.IntStatTile 0)
+            , statTileTopEmoteLastDay
             ]
         ]
 
