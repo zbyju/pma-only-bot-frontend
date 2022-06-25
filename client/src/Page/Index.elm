@@ -169,10 +169,10 @@ generalStatsView generalStatsState =
                 ]
                 [ Element.el (List.concat [ Base.heading2, [ Element.centerX ] ]) (Element.text "General stats")
                 , Element.wrappedRow [ Element.centerX, Element.spacingXY 10 0 ]
-                    [ StatTile.view "#Servers" <| toFloat generalStats.counts.servers
-                    , StatTile.view "#Channels" <| toFloat generalStats.counts.channels
-                    , StatTile.view "#Users" <| toFloat generalStats.counts.users
-                    , StatTile.view "#Messages" <| toFloat generalStats.counts.messages
-                    , StatTile.view "#Emotes" <| toFloat generalStats.counts.emotes
+                    [ StatTile.view "#Servers" (StatTile.IntStatTile generalStats.counts.servers)
+                    , StatTile.view "#Channels" (StatTile.IntStatTile generalStats.counts.channels)
+                    , StatTile.view "#Users" (StatTile.IntStatTile generalStats.counts.users)
+                    , StatTile.view "#Messages" (StatTile.IntStatTile generalStats.counts.messages)
+                    , StatTile.view "#Emotes" (StatTile.IntStatTile generalStats.counts.emotes)
                     ]
                 ]
