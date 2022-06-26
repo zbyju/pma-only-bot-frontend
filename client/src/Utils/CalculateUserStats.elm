@@ -12,6 +12,7 @@ getAllUsers serverStats =
         |> LU.flatten
         |> List.map (\x -> x.user)
         |> LE.uniqueBy .name
+        |> List.sortBy (\user -> String.toLower user.name)
 
 
 calculateTotalCountOfUser : SS.User -> SS.ServerStats -> Int
