@@ -4,6 +4,8 @@ import Browser
 import Browser.Navigation as Navigation
 import Flags
 import Html
+import Http
+import Json.Decode as Decode
 import Page.Index as Index
 import Page.NotFound as NotFound
 import Page.Server as Server
@@ -13,13 +15,17 @@ import Url
 
 type Model
     = DecodeFlagsError String
-    | AppInitialized Navigation.Key String Page
+    | AppInitialized Navigation.Key ( String, Bool ) Page
 
 
 type Page
     = Index Index.Model
     | Server Server.Model
     | NotFound
+
+
+type alias AuthStatus =
+    { isAuthenticated : Bool }
 
 
 init : Flags.RawFlags -> Url.Url -> Navigation.Key -> ( Model, Cmd Msg )
@@ -34,24 +40,27 @@ init rawFlags url key =
             let
                 api =
                     Flags.toBaseApiUrl flags
+
+                res =
+                    url
+                        |> urlToPage ( api, False )
+                        |> Tuple.mapFirst (AppInitialized key ( api, False ))
             in
-            url
-                |> urlToPage api
-                |> Tuple.mapFirst (AppInitialized key api)
+            ( Tuple.first res, Cmd.batch [ Tuple.second res, getAuthStatus api ] )
 
 
-urlToPage : String -> Url.Url -> ( Page, Cmd Msg )
-urlToPage api =
+urlToPage : ( String, Bool ) -> Url.Url -> ( Page, Cmd Msg )
+urlToPage ( api, isLoggedIn ) =
     Route.fromUrl
-        >> Maybe.map (routeToPage api)
+        >> Maybe.map (routeToPage ( api, isLoggedIn ))
         >> Maybe.withDefault ( NotFound, Cmd.none )
 
 
-routeToPage : String -> Route.Route -> ( Page, Cmd Msg )
-routeToPage api route =
+routeToPage : ( String, Bool ) -> Route.Route -> ( Page, Cmd Msg )
+routeToPage ( api, isLoggedIn ) route =
     case route of
         Route.Index ->
-            api
+            ( api, isLoggedIn )
                 |> Index.init
                 |> Tuple.mapBoth Index (Cmd.map IndexMsg)
 
@@ -61,9 +70,28 @@ routeToPage api route =
                 |> Tuple.mapBoth Server (Cmd.map ServerMsg)
 
 
+getAuthStatus : String -> Cmd Msg
+getAuthStatus apiOrigin =
+    Http.riskyRequest
+        { method = "GET"
+        , headers = []
+        , url = apiOrigin ++ "auth/discord/status"
+        , body = Http.emptyBody
+        , expect = Http.expectJson GotAuthStatus decodeAuthStatus
+        , timeout = Nothing
+        , tracker = Nothing
+        }
+
+
+decodeAuthStatus : Decode.Decoder AuthStatus
+decodeAuthStatus =
+    Decode.map AuthStatus (Decode.field "isAuthenticated" Decode.bool)
+
+
 type Msg
     = ChangedUrl Url.Url
     | ClickedLink Browser.UrlRequest
+    | GotAuthStatus (Result Http.Error AuthStatus)
     | IndexMsg Index.Msg
     | ServerMsg Server.Msg
 
@@ -83,20 +111,28 @@ update msg model =
                     Navigation.load href
             )
 
-        ( ChangedUrl url, AppInitialized key api _ ) ->
+        ( ChangedUrl url, AppInitialized key ( api, authStatus ) _ ) ->
             url
-                |> urlToPage api
-                |> Tuple.mapFirst (AppInitialized key api)
+                |> urlToPage ( api, authStatus )
+                |> Tuple.mapFirst (AppInitialized key ( api, authStatus ))
 
-        ( IndexMsg indexMsg, AppInitialized key api (Index indexModel) ) ->
+        ( IndexMsg indexMsg, AppInitialized key ( api, authStatus ) (Index indexModel) ) ->
             indexModel
                 |> Index.update indexMsg
-                |> Tuple.mapBoth (Index >> AppInitialized key api) (Cmd.map IndexMsg)
+                |> Tuple.mapBoth (Index >> AppInitialized key ( api, authStatus )) (Cmd.map IndexMsg)
 
-        ( ServerMsg serverMsg, AppInitialized key api (Server serverModel) ) ->
+        ( ServerMsg serverMsg, AppInitialized key ( api, authStatus ) (Server serverModel) ) ->
             serverModel
                 |> Server.update serverMsg
-                |> Tuple.mapBoth (Server >> AppInitialized key api) (Cmd.map ServerMsg)
+                |> Tuple.mapBoth (Server >> AppInitialized key ( api, authStatus )) (Cmd.map ServerMsg)
+
+        ( GotAuthStatus authStatusResult, AppInitialized key ( api, _ ) page ) ->
+            case authStatusResult of
+                Err _ ->
+                    ( AppInitialized key ( api, False ) page, Cmd.none )
+
+                Ok authStatus ->
+                    ( AppInitialized key ( api, authStatus.isAuthenticated ) page, Cmd.none )
 
         _ ->
             ( model
@@ -112,18 +148,18 @@ view model =
             , body = [ Html.div [] [ Html.text "Something went wrong with flags decoding ..." ] ]
             }
 
-        AppInitialized _ _ page ->
-            pageView page
+        AppInitialized _ ( _, isLoggedIn ) page ->
+            pageView page isLoggedIn
 
 
-pageView : Page -> Browser.Document Msg
-pageView page =
+pageView : Page -> Bool -> Browser.Document Msg
+pageView page isLoggedIn =
     case page of
         NotFound ->
             NotFound.view
 
         Index indexModel ->
-            Index.view IndexMsg indexModel
+            Index.view IndexMsg isLoggedIn indexModel
 
         Server serverModel ->
             Server.view ServerMsg serverModel

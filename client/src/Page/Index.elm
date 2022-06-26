@@ -7,15 +7,11 @@ import Element
 import Element.Background
 import Element.Border as Border
 import Element.Font as Font
-import Html
 import Http
-import Json.Decode as Decode
-import Json.Decode.Pipeline as Pipeline
 import List exposing (concat)
 import Route
 import Style.Base as Base
 import Style.Color as Color
-import Url
 import Utils.Decode.GeneralStatsDecoder as GSDecode
 import Utils.GeneralStats as GS
 
@@ -28,7 +24,6 @@ type GeneralStatsState
 
 type alias Model =
     { apiOrigin : String
-    , isLoggedIn : Bool
     , generalStatsState : GeneralStatsState
     }
 
@@ -45,10 +40,9 @@ getGeneralStats apiOrigin =
         }
 
 
-init : String -> ( Model, Cmd Msg )
-init apiOrigin =
+init : ( String, Bool ) -> ( Model, Cmd Msg )
+init ( apiOrigin, _ ) =
     ( { apiOrigin = apiOrigin
-      , isLoggedIn = False
       , generalStatsState = LoadingGeneralStats
       }
     , getGeneralStats apiOrigin
@@ -75,8 +69,8 @@ update msg model =
                     )
 
 
-view : (Msg -> msg) -> Model -> Browser.Document msg
-view wrapMsg model =
+view : (Msg -> msg) -> Bool -> Model -> Browser.Document msg
+view wrapMsg isLoggedIn model =
     { title = "Index Page"
     , body =
         [ Element.layout
@@ -89,7 +83,7 @@ view wrapMsg model =
                 , Element.height Element.fill
                 ]
                 [ header
-                , Element.map wrapMsg <| content model
+                , Element.map wrapMsg <| content model isLoggedIn
                 ]
         ]
     }
@@ -100,8 +94,8 @@ header =
     Header.view (Just Route.Index)
 
 
-content : Model -> Element.Element msg
-content model =
+content : Model -> Bool -> Element.Element msg
+content model isLoggedIn =
     Element.column [ Element.width Element.fill, Element.height Element.fill ]
         [ Element.el
             (concat
@@ -113,30 +107,50 @@ content model =
                 ]
             )
             (Element.text "Welcome to the dashboard of my Discord Bot!")
-        , loginView True
+        , loginView isLoggedIn
         , generalStatsView model.generalStatsState
         ]
 
 
 loginView : Bool -> Element.Element msg
-loginView _ =
-    Element.column
-        [ Element.width Element.fill
-        , Element.spacingXY 0 25
-        ]
-        [ Element.el
-            [ Font.center
-            , Element.centerX
+loginView isLoggedIn =
+    if not isLoggedIn then
+        Element.column
+            [ Element.width Element.fill
+            , Element.spacingXY 0 25
             ]
-            (Element.text "You can continue into the dashboard by logging in.")
-        , Element.link
-            [ Element.centerX
-            , Element.paddingXY 15 12
-            , Element.Background.color Color.accentBackground
-            , Border.rounded 10
+            [ Element.el
+                [ Font.center
+                , Element.centerX
+                ]
+                (Element.text "You can continue into the dashboard by logging in.")
+            , Element.link
+                [ Element.centerX
+                , Element.paddingXY 15 12
+                , Element.Background.color Color.accentBackground
+                , Border.rounded 10
+                ]
+                { url = "http://localhost:3001/api/v1/auth/discord", label = Element.text "Login using Discord" }
             ]
-            { url = "http://localhost:3001/api/v1/auth/discord", label = Element.text "Login using Discord" }
-        ]
+
+    else
+        Element.column
+            [ Element.width Element.fill
+            , Element.spacingXY 0 25
+            ]
+            [ Element.el
+                [ Font.center
+                , Element.centerX
+                ]
+                (Element.text "You are logged in!")
+            , Element.link
+                [ Element.centerX
+                , Element.paddingXY 15 12
+                , Element.Background.color Color.accentBackground
+                , Border.rounded 10
+                ]
+                { url = "http://localhost:3001/api/v1/auth/discord", label = Element.text "Login using Discord" }
+            ]
 
 
 generalStatsView : GeneralStatsState -> Element.Element msg
