@@ -35,12 +35,20 @@ type alias UserDropdown =
     }
 
 
+type alias EmoteDropdown =
+    { state : Dropdown.State
+    , selectedEmote : Maybe SS.Emote
+    }
+
+
 type alias Model =
     { apiOrigin : String
     , serverId : String
     , serverStatsState : ServerStatsState
     , users : List SS.User
+    , emotes : List SS.Emote
     , userDropdown : UserDropdown
+    , emoteDropdown : EmoteDropdown
     }
 
 
@@ -58,7 +66,9 @@ init ( api, serverId ) =
       , apiOrigin = api
       , serverStatsState = LoadingServerStats
       , users = []
+      , emotes = []
       , userDropdown = { state = Dropdown.newState "userDropdown", selectedUser = Nothing }
+      , emoteDropdown = { state = Dropdown.newState "emoteDropdown", selectedEmote = Nothing }
       }
     , getServerStats api serverId
     )
@@ -67,7 +77,9 @@ init ( api, serverId ) =
 type Msg
     = GotServerStats (Result Http.Error SS.ServerStats)
     | SelectedUser (Maybe SS.User)
-    | DropdownMsg (Dropdown.Msg SS.User)
+    | DropdownUserMsg (Dropdown.Msg SS.User)
+    | SelectedEmote (Maybe SS.Emote)
+    | DropdownEmoteMsg (Dropdown.Msg SS.Emote)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -86,26 +98,30 @@ update msg model =
                     let
                         users =
                             CUS.getAllUsers serverStats
+
+                        emotes =
+                            CES.getAllUsers serverStats
                     in
                     ( { model
                         | serverStatsState = SuccessServerStats serverStats
                         , users = users
+                        , emotes = emotes
                       }
                     , Cmd.none
                     )
 
-        DropdownMsg dropdownMsg ->
+        DropdownUserMsg dropdownUserMsg ->
             let
                 ud =
                     model.userDropdown
 
                 ( updatedDropdownState, dropdownCmd ) =
-                    Dropdown.update userDropdownConfig dropdownMsg model.userDropdown.state
+                    Dropdown.update userDropdownConfig dropdownUserMsg model.userDropdown.state
 
-                updatedPersonDropdown =
+                updatedUserDropdown =
                     { ud | state = updatedDropdownState }
             in
-            ( { model | userDropdown = updatedPersonDropdown }
+            ( { model | userDropdown = updatedUserDropdown }
             , dropdownCmd
             )
 
@@ -114,18 +130,45 @@ update msg model =
                 ud =
                     model.userDropdown
 
-                updatedPersonDropdown =
+                updatedUserDropdown =
                     { ud | selectedUser = selectedUser }
             in
-            ( { model | userDropdown = updatedPersonDropdown }
+            ( { model | userDropdown = updatedUserDropdown }
+            , Cmd.none
+            )
+
+        DropdownEmoteMsg dropdownEmoteMsg ->
+            let
+                ed =
+                    model.emoteDropdown
+
+                ( updatedDropdownState, dropdownCmd ) =
+                    Dropdown.update emoteDropdownConfig dropdownEmoteMsg model.emoteDropdown.state
+
+                updatedEmoteDropdown =
+                    { ed | state = updatedDropdownState }
+            in
+            ( { model | emoteDropdown = updatedEmoteDropdown }
+            , dropdownCmd
+            )
+
+        SelectedEmote selectedEmote ->
+            let
+                ed =
+                    model.emoteDropdown
+
+                updatedEmoteDropdown =
+                    { ed | selectedEmote = selectedEmote }
+            in
+            ( { model | emoteDropdown = updatedEmoteDropdown }
             , Cmd.none
             )
 
 
-userDropdownConfig : Dropdown.Config Msg SS.User
-userDropdownConfig =
-    Dropdown.newConfig SelectedUser userToDropdownLabel
-        |> Dropdown.withPrompt "Select user ..."
+dropdownConfig : (Maybe a -> Msg) -> (a -> String) -> String -> Dropdown.Config Msg a
+dropdownConfig selectedMsg entityToLabel prompt =
+    Dropdown.newConfig selectedMsg entityToLabel
+        |> Dropdown.withPrompt prompt
         |> Dropdown.withItemClass "dropdown-item"
         |> Dropdown.withMenuClass "dropdown-menu"
         |> Dropdown.withPromptClass "dropdown-prompt"
@@ -135,9 +178,24 @@ userDropdownConfig =
         |> Dropdown.withClearClass "dropdown-clear"
 
 
+userDropdownConfig : Dropdown.Config Msg SS.User
+userDropdownConfig =
+    dropdownConfig SelectedUser userToDropdownLabel "Select user..."
+
+
+emoteDropdownConfig : Dropdown.Config Msg SS.Emote
+emoteDropdownConfig =
+    dropdownConfig SelectedEmote emoteToDropdownLabel "Select emote..."
+
+
 userToDropdownLabel : SS.User -> String
 userToDropdownLabel user =
     user.name
+
+
+emoteToDropdownLabel : SS.Emote -> String
+emoteToDropdownLabel emote =
+    emote.name
 
 
 view : (Msg -> msg) -> Model -> Browser.Document msg
@@ -197,39 +255,61 @@ content model =
                 ]
 
         SuccessServerStats serverStats ->
-            case model.userDropdown.selectedUser of
-                Nothing ->
-                    Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
-                        [ VerticalSpace.view 0
-                        , serverStatsView serverStats
-                        , emoteUsageView serverStats
-                        , selectUserView model
-                        , VerticalSpace.view 50
-                        ]
-
-                Just su ->
-                    Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
-                        [ VerticalSpace.view 0
-                        , serverStatsView serverStats
-                        , emoteUsageView serverStats
-                        , selectUserView model
-                        , userMessageNumberView serverStats su
-                        , VerticalSpace.view 50
-                        ]
+            Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
+                [ VerticalSpace.view 0
+                , serverStatsView serverStats model.emotes
+                , emoteUsageView serverStats model.emotes
+                , emoteStatsView model serverStats
+                , userStatsView model serverStats
+                , VerticalSpace.view 100
+                ]
 
 
-serverStatsView : SS.ServerStats -> Element.Element msg
-serverStatsView serverStats =
+emoteStatsView : Model -> SS.ServerStats -> Element.Element Msg
+emoteStatsView model serverStats =
+    case model.emoteDropdown.selectedEmote of
+        Nothing ->
+            Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
+                [ selectEmoteView model
+                , VerticalSpace.view 50
+                ]
+
+        Just se ->
+            Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
+                [ selectEmoteView model
+                , VerticalSpace.view 50
+                ]
+
+
+userStatsView : Model -> SS.ServerStats -> Element.Element Msg
+userStatsView model serverStats =
+    case model.userDropdown.selectedUser of
+        Nothing ->
+            Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
+                [ selectUserView model
+                , VerticalSpace.view 50
+                ]
+
+        Just su ->
+            Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
+                [ selectUserView model
+                , userMessageNumberView serverStats model.emotes su
+                , VerticalSpace.view 50
+                ]
+
+
+serverStatsView : SS.ServerStats -> List SS.Emote -> Element.Element msg
+serverStatsView serverStats emotes =
     Element.column [ Element.width Element.fill, Element.height Element.fill ]
-        [ topStatsLastDayView serverStats
+        [ topStatsLastDayView serverStats emotes
         ]
 
 
-topStatsLastDayView : SS.ServerStats -> Element.Element msg
-topStatsLastDayView serverStats =
+topStatsLastDayView : SS.ServerStats -> List SS.Emote -> Element.Element msg
+topStatsLastDayView serverStats emotes =
     let
         emoteUsageStats =
-            CES.calculateEmoteUsagePeriods serverStats
+            CES.calculateEmoteUsagePeriods emotes serverStats
 
         topEmoteLastWeek =
             List.head <| List.reverse <| List.sortBy (\e -> e.countLastWeek) emoteUsageStats
@@ -268,8 +348,8 @@ topStatsLastDayView serverStats =
         ]
 
 
-emoteUsageView : SS.ServerStats -> Element.Element msg
-emoteUsageView serverStats =
+emoteUsageView : SS.ServerStats -> List SS.Emote -> Element.Element msg
+emoteUsageView serverStats emotes =
     Element.column
         [ Element.width Element.fill
         , Element.height Element.fill
@@ -283,15 +363,15 @@ emoteUsageView serverStats =
             ]
           <|
             Element.html <|
-                emoteUsageBarChart serverStats
+                emoteUsageBarChart serverStats emotes
         ]
 
 
-emoteUsageBarChart : SS.ServerStats -> Html.Html msg
-emoteUsageBarChart stats =
+emoteUsageBarChart : SS.ServerStats -> List SS.Emote -> Html.Html msg
+emoteUsageBarChart stats emotes =
     let
         emoteUsageStats =
-            CES.calculateEmoteUsagePeriods stats
+            CES.calculateEmoteUsagePeriods emotes stats
     in
     C.chart
         [ CA.width 1200
@@ -319,8 +399,8 @@ emoteUsageBarChart stats =
         ]
 
 
-userMessageNumberView : SS.ServerStats -> SS.User -> Element.Element msg
-userMessageNumberView serverStats selectedUser =
+userMessageNumberView : SS.ServerStats -> List SS.Emote -> SS.User -> Element.Element msg
+userMessageNumberView serverStats emotes selectedUser =
     Element.column
         [ Element.width Element.fill
         , Element.height Element.fill
@@ -334,7 +414,7 @@ userMessageNumberView serverStats selectedUser =
             ]
           <|
             Element.html <|
-                userMessageNumberLineChart serverStats selectedUser
+                userMessageNumberLineChart serverStats emotes selectedUser
         ]
 
 
@@ -355,16 +435,38 @@ selectUserView model =
         ]
 
 
+selectEmoteView : Model -> Element.Element Msg
+selectEmoteView model =
+    Element.column
+        [ Element.width Element.fill
+        , Element.height Element.fill
+        , Element.spacingXY 0 50
+        ]
+        [ Element.el (concat [ Base.heading1, [ Element.centerX, Font.center ] ]) (Element.text "Select emote")
+        , Element.el
+            [ Element.centerX
+            ]
+          <|
+            Element.html <|
+                emotesDropdownView model
+        ]
+
+
 usersDropdownView : Model -> Html.Html Msg
 usersDropdownView model =
-    Html.map DropdownMsg (Dropdown.view userDropdownConfig model.userDropdown.state model.users model.userDropdown.selectedUser)
+    Html.map DropdownUserMsg (Dropdown.view userDropdownConfig model.userDropdown.state model.users model.userDropdown.selectedUser)
 
 
-userMessageNumberLineChart : SS.ServerStats -> SS.User -> Html.Html msg
-userMessageNumberLineChart serverStats selectedUser =
+emotesDropdownView : Model -> Html.Html Msg
+emotesDropdownView model =
+    Html.map DropdownEmoteMsg (Dropdown.view emoteDropdownConfig model.emoteDropdown.state model.emotes model.emoteDropdown.selectedEmote)
+
+
+userMessageNumberLineChart : SS.ServerStats -> List SS.Emote -> SS.User -> Html.Html msg
+userMessageNumberLineChart serverStats emotes selectedUser =
     let
         emoteUsageStats =
-            CES.calculateEmoteUsagePeriods serverStats
+            CES.calculateEmoteUsagePeriods emotes serverStats
 
         users =
             CUS.getAllUsers serverStats
