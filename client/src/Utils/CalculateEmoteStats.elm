@@ -1,6 +1,7 @@
 module Utils.CalculateEmoteStats exposing (..)
 
 import List.Extra as LE
+import Utils.ListUtils as LU
 import Utils.ServerStats as SS
 
 
@@ -102,7 +103,7 @@ calculateEmoteUsage : SS.ServerStats -> EmotesUsage
 calculateEmoteUsage serverStats =
     serverStats.stats
         |> List.map calculateEmoteUsagePerDay
-        |> flatten
+        |> LU.flatten
         |> reduceEmoteUsage
 
 
@@ -110,14 +111,9 @@ calculateEmoteUsagePerDay : SS.DayStats -> EmotesUsage
 calculateEmoteUsagePerDay day =
     day.perUser
         |> List.map calculateUserEmoteUsage
-        |> flatten
+        |> LU.flatten
 
 
 calculateUserEmoteUsage : SS.StatsPerUserPerDay -> EmotesUsage
 calculateUserEmoteUsage userUsage =
     List.map (\e -> { emote = e.emote, count = toFloat e.count }) userUsage.emotes
-
-
-flatten : List (List a) -> List a
-flatten list =
-    List.foldr (++) [] list

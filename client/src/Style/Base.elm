@@ -1,7 +1,6 @@
 module Style.Base exposing (..)
 
 import Element
-import Element.Background as Background
 import Element.Font as Font
 
 

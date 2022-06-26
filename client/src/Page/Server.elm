@@ -6,7 +6,7 @@ import Chart.Attributes as CA
 import Component.Header as Header
 import Component.StatTile as StatTile
 import Component.VerticalSpace as VerticalSpace
-import Date
+import Dropdown
 import Element
 import Element.Background
 import Element.Font as Font
@@ -17,7 +17,9 @@ import Route
 import Style.Base as Base
 import Style.Color as Color
 import Utils.CalculateEmoteStats as CES
+import Utils.CalculateUserStats as CUS
 import Utils.Decode.ServerStatsDecoder as SSDecode
+import Utils.ListUtils as LU
 import Utils.ServerStats as SS
 
 
@@ -27,10 +29,18 @@ type ServerStatsState
     | SuccessServerStats SS.ServerStats
 
 
+type alias UserDropdown =
+    { state : Dropdown.State
+    , selectedUser : Maybe SS.User
+    }
+
+
 type alias Model =
     { apiOrigin : String
     , serverId : String
     , serverStatsState : ServerStatsState
+    , users : List SS.User
+    , userDropdown : UserDropdown
     }
 
 
@@ -44,13 +54,20 @@ getServerStats apiOrigin serverId =
 
 init : ( String, String ) -> ( Model, Cmd Msg )
 init ( api, serverId ) =
-    ( { serverId = serverId, apiOrigin = api, serverStatsState = LoadingServerStats }
+    ( { serverId = serverId
+      , apiOrigin = api
+      , serverStatsState = LoadingServerStats
+      , users = []
+      , userDropdown = { state = Dropdown.newState "userDropdown", selectedUser = Nothing }
+      }
     , getServerStats api serverId
     )
 
 
 type Msg
     = GotServerStats (Result Http.Error SS.ServerStats)
+    | SelectedUser (Maybe SS.User)
+    | DropdownMsg (Dropdown.Msg SS.User)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -66,11 +83,61 @@ update msg model =
                     )
 
                 Ok serverStats ->
+                    let
+                        users =
+                            CUS.getAllUsers serverStats
+                    in
                     ( { model
                         | serverStatsState = SuccessServerStats serverStats
+                        , users = users
                       }
                     , Cmd.none
                     )
+
+        DropdownMsg dropdownMsg ->
+            let
+                ud =
+                    model.userDropdown
+
+                ( updatedDropdownState, dropdownCmd ) =
+                    Dropdown.update userDropdownConfig dropdownMsg model.userDropdown.state
+
+                updatedPersonDropdown =
+                    { ud | state = updatedDropdownState }
+            in
+            ( { model | userDropdown = updatedPersonDropdown }
+            , dropdownCmd
+            )
+
+        SelectedUser selectedUser ->
+            let
+                ud =
+                    model.userDropdown
+
+                updatedPersonDropdown =
+                    { ud | selectedUser = selectedUser }
+            in
+            ( { model | userDropdown = updatedPersonDropdown }
+            , Cmd.none
+            )
+
+
+userDropdownConfig : Dropdown.Config Msg SS.User
+userDropdownConfig =
+    Dropdown.newConfig SelectedUser userToDropdownLabel
+        |> Dropdown.withPrompt "Select user ..."
+        |> Dropdown.withItemClass "dropdown-item"
+        |> Dropdown.withMenuClass "dropdown-menu"
+        |> Dropdown.withPromptClass "dropdown-prompt"
+        |> Dropdown.withSelectedClass "dropdown-selected"
+        |> Dropdown.withTriggerClass "dropdown-trigger"
+        |> Dropdown.withArrowClass "dropdown-arrow"
+        |> Dropdown.withClearClass "dropdown-clear"
+
+
+userToDropdownLabel : SS.User -> String
+userToDropdownLabel user =
+    user.name
 
 
 view : (Msg -> msg) -> Model -> Browser.Document msg
@@ -98,7 +165,7 @@ header serverId =
     Header.view (Just <| Route.Server serverId)
 
 
-content : Model -> Element.Element msg
+content : Model -> Element.Element Msg
 content model =
     case model.serverStatsState of
         LoadingServerStats ->
@@ -130,13 +197,25 @@ content model =
                 ]
 
         SuccessServerStats serverStats ->
-            Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
-                [ VerticalSpace.view 0
-                , serverStatsView serverStats
-                , emoteUsageView serverStats
-                , userMessageNumberView serverStats
-                , VerticalSpace.view 50
-                ]
+            case model.userDropdown.selectedUser of
+                Nothing ->
+                    Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
+                        [ VerticalSpace.view 0
+                        , serverStatsView serverStats
+                        , emoteUsageView serverStats
+                        , selectUserView model
+                        , VerticalSpace.view 50
+                        ]
+
+                Just su ->
+                    Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
+                        [ VerticalSpace.view 0
+                        , serverStatsView serverStats
+                        , emoteUsageView serverStats
+                        , selectUserView model
+                        , userMessageNumberView serverStats su
+                        , VerticalSpace.view 50
+                        ]
 
 
 serverStatsView : SS.ServerStats -> Element.Element msg
@@ -240,8 +319,8 @@ emoteUsageBarChart stats =
         ]
 
 
-userMessageNumberView : SS.ServerStats -> Element.Element msg
-userMessageNumberView serverStats =
+userMessageNumberView : SS.ServerStats -> SS.User -> Element.Element msg
+userMessageNumberView serverStats selectedUser =
     Element.column
         [ Element.width Element.fill
         , Element.height Element.fill
@@ -255,5 +334,65 @@ userMessageNumberView serverStats =
             ]
           <|
             Element.html <|
-                emoteUsageBarChart serverStats
+                userMessageNumberLineChart serverStats selectedUser
+        ]
+
+
+selectUserView : Model -> Element.Element Msg
+selectUserView model =
+    Element.column
+        [ Element.width Element.fill
+        , Element.height Element.fill
+        , Element.spacingXY 0 50
+        ]
+        [ Element.el (concat [ Base.heading1, [ Element.centerX, Font.center ] ]) (Element.text "Select user")
+        , Element.el
+            [ Element.centerX
+            ]
+          <|
+            Element.html <|
+                usersDropdownView model
+        ]
+
+
+usersDropdownView : Model -> Html.Html Msg
+usersDropdownView model =
+    Html.map DropdownMsg (Dropdown.view userDropdownConfig model.userDropdown.state model.users model.userDropdown.selectedUser)
+
+
+userMessageNumberLineChart : SS.ServerStats -> SS.User -> Html.Html msg
+userMessageNumberLineChart serverStats selectedUser =
+    let
+        emoteUsageStats =
+            CES.calculateEmoteUsagePeriods serverStats
+
+        users =
+            CUS.getAllUsers serverStats
+
+        userCounts =
+            CUS.calculateCountOfUserPerDay serverStats selectedUser
+
+        data =
+            userCounts
+                |> LU.addIndexToList
+                |> List.map (\( i, u ) -> { index = toFloat i, count = toFloat u.count })
+    in
+    C.chart
+        [ CA.width 1200
+        , CA.height 300
+        ]
+        [ C.yLabels []
+        , C.xLabels []
+        , C.legendsAt .max
+            .max
+            [ CA.column
+            , CA.moveLeft 15
+            , CA.alignRight
+            , CA.spacing 5
+            ]
+            []
+        , C.series .index
+            [ C.interpolated .count [ CA.width 4, CA.monotone ] [] |> C.named selectedUser.name
+            ]
+            data
         ]
