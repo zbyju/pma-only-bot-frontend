@@ -2,7 +2,7 @@ module Utils.Decode.ServerStatsDecoder exposing (..)
 
 import Json.Decode as Decode
 import Json.Decode.Pipeline as Pipeline
-import Utils.ServerStats as SS
+import Types.ServerStatsTypes as SS
 
 
 decodeServerStats : Decode.Decoder SS.ServerStats

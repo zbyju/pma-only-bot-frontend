@@ -1,4 +1,4 @@
-module Utils.ServerStats exposing (..)
+module Types.ServerStatsTypes exposing (..)
 
 
 type alias Server =

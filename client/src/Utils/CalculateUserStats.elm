@@ -1,9 +1,9 @@
 module Utils.CalculateUserStats exposing (..)
 
 import List.Extra as LE
+import Types.ServerStatsTypes as SS
 import Utils.CalculateEmoteStats as CES
 import Utils.ListUtils as LU
-import Utils.ServerStats as SS
 
 
 type alias UserTotalMessageCountOnDay =

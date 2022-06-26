@@ -16,11 +16,11 @@ import List exposing (concat)
 import Route
 import Style.Base as Base
 import Style.Color as Color
+import Types.ServerStatsTypes as SS
 import Utils.CalculateEmoteStats as CES
 import Utils.CalculateUserStats as CUS
 import Utils.Decode.ServerStatsDecoder as SSDecode
 import Utils.ListUtils as LU
-import Utils.ServerStats as SS
 
 
 type ServerStatsState

@@ -1,8 +1,8 @@
 module Utils.CalculateEmoteStats exposing (..)
 
 import List.Extra as LE
+import Types.ServerStatsTypes as SS
 import Utils.ListUtils as LU
-import Utils.ServerStats as SS
 
 
 type alias EmoteUsagePeriods =
