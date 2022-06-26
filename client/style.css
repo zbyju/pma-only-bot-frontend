@@ -11,3 +11,40 @@
 a {
   color: #60b5cc;
 }
+
+.dropdown-item {
+  border-bottom: 1px solid rgb(123, 77, 255);
+  margin: 5px 0;
+  padding: 5px 10px;
+}
+
+.dropdown-menu {
+  border: 1px solid rgb(123, 77, 255);
+  background-color: black;
+  z-index: 10;
+}
+
+.dropdown-prompt {
+  color: white;
+}
+
+.dropdown-selected {
+  font-weight: bold;
+  color: white;
+}
+
+.dropdown-arrow {
+  background-color: rgb(234, 96, 223);
+}
+
+.dropdown-clear {
+  background-color: rgb(234, 96, 223);
+}
+
+.dropdown-trigger {
+  border: 1px solid rgb(123, 77, 255);
+  background-color: black;
+  width: 300px;
+  padding: 10px;
+  color: white;
+}
