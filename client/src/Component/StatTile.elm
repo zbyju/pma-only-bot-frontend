@@ -4,6 +4,7 @@ import Element
 import Element.Background as Background
 import Element.Border as Border
 import Element.Font as Font
+import Round
 import Simple.Transition as Transition
 import Style.Color as Color
 
@@ -27,7 +28,7 @@ view label value =
                     Element.text <| String.fromInt int
 
                 FloatStatTile float ->
-                    Element.text <| String.fromFloat float
+                    Element.text <| Round.round 2 float
 
                 UrlStatTile url desc ->
                     Element.image
