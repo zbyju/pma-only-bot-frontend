@@ -257,7 +257,7 @@ content model =
         SuccessServerStats serverStats ->
             Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
                 [ VerticalSpace.view 0
-                , serverStatsView serverStats model.emotes
+                , serverStatsView serverStats model.emotes model.users
                 , emoteUsageView serverStats model.emotes
                 , emoteStatsView model serverStats
                 , userStatsView model serverStats
@@ -299,21 +299,27 @@ userStatsView model serverStats =
                 ]
 
 
-serverStatsView : SS.ServerStats -> List SS.Emote -> Element.Element msg
-serverStatsView serverStats emotes =
+serverStatsView : SS.ServerStats -> List SS.Emote -> List SS.User -> Element.Element msg
+serverStatsView serverStats emotes users =
     Element.column [ Element.width Element.fill, Element.height Element.fill ]
-        [ topStatsLastDayView serverStats emotes
+        [ topStatsLastDayView serverStats emotes users
         ]
 
 
-topStatsLastDayView : SS.ServerStats -> List SS.Emote -> Element.Element msg
-topStatsLastDayView serverStats emotes =
+topStatsLastDayView : SS.ServerStats -> List SS.Emote -> List SS.User -> Element.Element msg
+topStatsLastDayView serverStats emotes users =
     let
         emoteUsageStats =
             CES.calculateEmoteUsagePeriods emotes serverStats
 
+        userCountStats =
+            CUS.calculateUserCountsPeriods users serverStats
+
         topEmoteLastWeek =
             List.head <| List.reverse <| List.sortBy (\e -> e.countLastWeek) emoteUsageStats
+
+        topUserLastWeek =
+            List.head <| List.reverse <| List.sortBy (\u -> u.countLastWeek) userCountStats
 
         statTileTopEmoteLastWeek =
             case topEmoteLastWeek of
@@ -323,8 +329,19 @@ topStatsLastDayView serverStats emotes =
                 Just topEmote ->
                     StatTile.view "Top emote last week" (StatTile.UrlStatTile topEmote.emote.url topEmote.emote.name)
 
+        statTileTopUserLastWeek =
+            case topUserLastWeek of
+                Nothing ->
+                    StatTile.view "Top user last week" (StatTile.StringStatTile "No users")
+
+                Just topUser ->
+                    StatTile.view "Top user last week" (StatTile.StringStatTile topUser.user.name)
+
         topEmoteLastDay =
             List.head <| List.reverse <| List.sortBy (\e -> e.countLastDay) emoteUsageStats
+
+        topUserLastDay =
+            List.head <| List.reverse <| List.sortBy (\u -> u.countLastDay) userCountStats
 
         statTileTopEmoteLastDay =
             case topEmoteLastDay of
@@ -333,6 +350,14 @@ topStatsLastDayView serverStats emotes =
 
                 Just topEmote ->
                     StatTile.view "Top emote last day" (StatTile.UrlStatTile topEmote.emote.url topEmote.emote.name)
+
+        statTileTopUserLastDay =
+            case topUserLastDay of
+                Nothing ->
+                    StatTile.view "Top user last day" (StatTile.StringStatTile "No users")
+
+                Just topUser ->
+                    StatTile.view "Top user last day" (StatTile.StringStatTile topUser.user.name)
     in
     Element.column
         [ Element.width Element.fill
@@ -341,8 +366,8 @@ topStatsLastDayView serverStats emotes =
         ]
         [ Element.el (concat [ Base.heading1, [ Element.centerX, Font.center ] ]) (Element.text "Top")
         , Element.wrappedRow [ Element.centerX, Element.spacingXY 10 0 ]
-            [ StatTile.view "Top user last day" (StatTile.IntStatTile 10)
-            , StatTile.view "Top user last week" (StatTile.IntStatTile 10)
+            [ statTileTopUserLastWeek
+            , statTileTopUserLastDay
             , statTileTopEmoteLastWeek
             , statTileTopEmoteLastDay
             ]

@@ -5,6 +5,19 @@ import Utils.ListUtils as LU
 import Utils.ServerStats as SS
 
 
+type alias UserTotalMessageCountOnDay =
+    { date : String
+    , count : Int
+    }
+
+
+type alias UserCountPeriods =
+    { user : SS.User
+    , countLastWeek : Float
+    , countLastDay : Float
+    }
+
+
 getAllUsers : SS.ServerStats -> List SS.User
 getAllUsers serverStats =
     serverStats.stats
@@ -27,10 +40,39 @@ calculateTotalCountOfUser user serverStats =
         |> List.sum
 
 
-type alias UserTotalMessageCountOnDay =
-    { date : String
-    , count : Int
-    }
+calculateUserCountsPeriods : List SS.User -> SS.ServerStats -> List UserCountPeriods
+calculateUserCountsPeriods users serverStats =
+    let
+        usageLastWeek =
+            users
+                |> List.map (\user -> ( user, calculateTotalCountOfUser user serverStats ))
+
+        lastDayStats =
+            case LE.last serverStats.stats of
+                Nothing ->
+                    { stats = [] }
+
+                Just lastDay ->
+                    { stats = [ lastDay ] }
+
+        usageLastDay =
+            users
+                |> List.map (\user -> ( user, calculateTotalCountOfUser user lastDayStats ))
+
+        zippedStats =
+            LE.zip usageLastWeek usageLastDay
+
+        result =
+            zippedStats
+                |> List.map
+                    (\( ( userLastWeek, countLastWeek ), ( userLastDay, countLastDay ) ) ->
+                        { user = userLastWeek
+                        , countLastWeek = toFloat countLastWeek
+                        , countLastDay = toFloat countLastDay
+                        }
+                    )
+    in
+    result
 
 
 calculateCountOfUserPerDay : SS.ServerStats -> SS.User -> List UserTotalMessageCountOnDay
