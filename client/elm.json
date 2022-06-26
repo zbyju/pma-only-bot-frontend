@@ -6,6 +6,7 @@
     "elm-version": "0.19.1",
     "dependencies": {
         "direct": {
+            "EdutainmentLIVE/elm-dropdown": "1.0.0",
             "NoRedInk/elm-json-decode-pipeline": "1.0.1",
             "andrewMacmurray/elm-simple-animation": "2.3.0",
             "elm/browser": "1.0.2",
@@ -36,8 +37,6 @@
     },
     "test-dependencies": {
         "direct": {},
-        "indirect": {
-            "elm/random": "1.0.0"
-        }
+        "indirect": {}
     }
 }
