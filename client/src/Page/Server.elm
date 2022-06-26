@@ -294,6 +294,7 @@ userStatsView model serverStats =
         Just su ->
             Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
                 [ selectUserView model
+                , userStatsSummaryView serverStats su model.emotes
                 , userMessageNumberView serverStats model.users su
                 , VerticalSpace.view 50
                 ]
@@ -370,6 +371,48 @@ topStatsLastDayView serverStats emotes users =
             , statTileTopUserLastDay
             , statTileTopEmoteLastWeek
             , statTileTopEmoteLastDay
+            ]
+        ]
+
+
+userStatsSummaryView : SS.ServerStats -> SS.User -> List SS.Emote -> Element.Element msg
+userStatsSummaryView serverStats user emotes =
+    let
+        totalCount =
+            CUS.calculateTotalCountOfUser user serverStats
+
+        emoteCount =
+            CUS.calculateEmoteCountOfUser user serverStats
+
+        emoteUsageByUser =
+            CES.calculateEmoteUsageByUserForEmotes emotes serverStats user
+
+        mostUsedEmote =
+            List.head <| List.reverse <| List.sortBy (\e -> e.count) emoteUsageByUser
+
+        stats =
+            { totalCount = totalCount, emoteCount = emoteCount, averageCountPerDay = toFloat totalCount / 7, averageEmoteCountPerDay = toFloat emoteCount / 7, mostUsedEmote = mostUsedEmote }
+
+        statTileMostUsedEmote =
+            case mostUsedEmote of
+                Nothing ->
+                    StatTile.view "Most used emote" <| StatTile.StringStatTile "No emote used"
+
+                Just mue ->
+                    StatTile.view "Most used emote" <| StatTile.UrlStatTile mue.emote.url mue.emote.name
+    in
+    Element.column
+        [ Element.width Element.fill
+        , Element.height Element.fill
+        , Element.spacingXY 0 50
+        ]
+        [ Element.el (concat [ Base.heading1, [ Element.centerX, Font.center ] ]) (Element.text "User summary")
+        , Element.wrappedRow [ Element.centerX, Element.spacingXY 10 0 ]
+            [ StatTile.view "#Messages" <| StatTile.IntStatTile stats.totalCount
+            , StatTile.view "#Messages per day" <| StatTile.FloatStatTile stats.averageCountPerDay
+            , StatTile.view "#Emotes" <| StatTile.IntStatTile stats.emoteCount
+            , StatTile.view "#Emotes per day" <| StatTile.FloatStatTile stats.averageEmoteCountPerDay
+            , statTileMostUsedEmote
             ]
         ]
 

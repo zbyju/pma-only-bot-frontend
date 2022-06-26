@@ -51,10 +51,34 @@ calculateEmoteUsage serverStats emote =
     }
 
 
+calculateEmoteUsageByUser : SS.ServerStats -> SS.User -> SS.Emote -> EmoteUsage
+calculateEmoteUsageByUser serverStats user emote =
+    { emote = emote
+    , count =
+        toFloat
+            (serverStats.stats
+                |> List.map .perUser
+                |> LU.flatten
+                |> List.filter (\x -> x.user.name == user.name)
+                |> List.map .emotes
+                |> LU.flatten
+                |> List.filter (\x -> x.emote.name == emote.name)
+                |> List.map .count
+                |> List.sum
+            )
+    }
+
+
 calculateEmoteUsageForEmotes : List SS.Emote -> SS.ServerStats -> List EmoteUsage
 calculateEmoteUsageForEmotes emotes serverStats =
     emotes
         |> List.map (calculateEmoteUsage serverStats)
+
+
+calculateEmoteUsageByUserForEmotes : List SS.Emote -> SS.ServerStats -> SS.User -> List EmoteUsage
+calculateEmoteUsageByUserForEmotes emotes serverStats user =
+    emotes
+        |> List.map (calculateEmoteUsageByUser serverStats user)
 
 
 calculateEmoteUsagePeriods : List SS.Emote -> SS.ServerStats -> List EmoteUsagePeriods

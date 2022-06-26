@@ -1,6 +1,7 @@
 module Utils.CalculateUserStats exposing (..)
 
 import List.Extra as LE
+import Utils.CalculateEmoteStats as CES
 import Utils.ListUtils as LU
 import Utils.ServerStats as SS
 
@@ -35,6 +36,18 @@ calculateTotalCountOfUser user serverStats =
         |> LU.flatten
         |> List.filter (\x -> x.user.name == user.name)
         |> List.map .channels
+        |> LU.flatten
+        |> List.map .count
+        |> List.sum
+
+
+calculateEmoteCountOfUser : SS.User -> SS.ServerStats -> Int
+calculateEmoteCountOfUser user serverStats =
+    serverStats.stats
+        |> List.map .perUser
+        |> LU.flatten
+        |> List.filter (\x -> x.user.name == user.name)
+        |> List.map .emotes
         |> LU.flatten
         |> List.map .count
         |> List.sum
