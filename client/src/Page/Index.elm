@@ -149,7 +149,7 @@ loginView isLoggedIn =
                 , Element.Background.color Color.accentBackground
                 , Border.rounded 10
                 ]
-                { url = "http://localhost:3001/api/v1/auth/discord", label = Element.text "Login using Discord" }
+                { url = "http://localhost:3000/server/MOCK_SERVER_ID", label = Element.text "Continue to the dashboard" }
             ]
 
 
