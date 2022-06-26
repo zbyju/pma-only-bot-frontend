@@ -16,6 +16,12 @@ type alias EmoteUsage =
     { emote : SS.Emote, count : Float }
 
 
+type alias EmoteUsageOnDay =
+    { date : String
+    , count : Int
+    }
+
+
 getAllUsers : SS.ServerStats -> List SS.Emote
 getAllUsers serverStats =
     serverStats.stats
@@ -82,3 +88,21 @@ calculateEmoteUsagePeriods emotes serverStats =
                     )
     in
     result
+
+
+calculateEmoteUsagePerDay : SS.ServerStats -> SS.Emote -> List EmoteUsageOnDay
+calculateEmoteUsagePerDay serverStats emote =
+    serverStats.stats
+        |> List.map
+            (\day ->
+                let
+                    count =
+                        day.perUser
+                            |> List.map .emotes
+                            |> LU.flatten
+                            |> List.filter (\x -> x.emote.name == emote.name)
+                            |> List.map .count
+                            |> List.sum
+                in
+                { date = day.date, count = count }
+            )

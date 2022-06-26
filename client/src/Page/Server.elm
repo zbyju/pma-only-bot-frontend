@@ -277,6 +277,7 @@ emoteStatsView model serverStats =
         Just se ->
             Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
                 [ selectEmoteView model
+                , individualEmoteUsageView serverStats model.emotes se
                 , VerticalSpace.view 50
                 ]
 
@@ -293,7 +294,7 @@ userStatsView model serverStats =
         Just su ->
             Element.column [ Element.width Element.fill, Element.height Element.shrink, Element.spacingXY 0 50 ]
                 [ selectUserView model
-                , userMessageNumberView serverStats model.emotes su
+                , userMessageNumberView serverStats model.users su
                 , VerticalSpace.view 50
                 ]
 
@@ -399,14 +400,14 @@ emoteUsageBarChart stats emotes =
         ]
 
 
-userMessageNumberView : SS.ServerStats -> List SS.Emote -> SS.User -> Element.Element msg
-userMessageNumberView serverStats emotes selectedUser =
+userMessageNumberView : SS.ServerStats -> List SS.User -> SS.User -> Element.Element msg
+userMessageNumberView serverStats users selectedUser =
     Element.column
         [ Element.width Element.fill
         , Element.height Element.fill
         , Element.spacingXY 0 50
         ]
-        [ Element.el (concat [ Base.heading1, [ Element.centerX, Font.center ] ]) (Element.text "Number of messages by users")
+        [ Element.el (concat [ Base.heading1, [ Element.centerX, Font.center ] ]) (Element.text "Number of messages by user")
         , Element.el
             [ Element.width <| Element.px 1200
             , Element.height <| Element.px 300
@@ -414,7 +415,26 @@ userMessageNumberView serverStats emotes selectedUser =
             ]
           <|
             Element.html <|
-                userMessageNumberLineChart serverStats emotes selectedUser
+                userMessageNumberLineChart serverStats users selectedUser
+        ]
+
+
+individualEmoteUsageView : SS.ServerStats -> List SS.Emote -> SS.Emote -> Element.Element msg
+individualEmoteUsageView serverStats emotes selectedEmote =
+    Element.column
+        [ Element.width Element.fill
+        , Element.height Element.fill
+        , Element.spacingXY 0 50
+        ]
+        [ Element.el (concat [ Base.heading1, [ Element.centerX, Font.center ] ]) (Element.text "Number of messages with emote")
+        , Element.el
+            [ Element.width <| Element.px 1200
+            , Element.height <| Element.px 300
+            , Element.centerX
+            ]
+          <|
+            Element.html <|
+                emoteUsageLineChart serverStats emotes selectedEmote
         ]
 
 
@@ -462,15 +482,9 @@ emotesDropdownView model =
     Html.map DropdownEmoteMsg (Dropdown.view emoteDropdownConfig model.emoteDropdown.state model.emotes model.emoteDropdown.selectedEmote)
 
 
-userMessageNumberLineChart : SS.ServerStats -> List SS.Emote -> SS.User -> Html.Html msg
-userMessageNumberLineChart serverStats emotes selectedUser =
+userMessageNumberLineChart : SS.ServerStats -> List SS.User -> SS.User -> Html.Html msg
+userMessageNumberLineChart serverStats users selectedUser =
     let
-        emoteUsageStats =
-            CES.calculateEmoteUsagePeriods emotes serverStats
-
-        users =
-            CUS.getAllUsers serverStats
-
         userCounts =
             CUS.calculateCountOfUserPerDay serverStats selectedUser
 
@@ -495,6 +509,38 @@ userMessageNumberLineChart serverStats emotes selectedUser =
             []
         , C.series .index
             [ C.interpolated .count [ CA.width 4, CA.monotone ] [] |> C.named selectedUser.name
+            ]
+            data
+        ]
+
+
+emoteUsageLineChart : SS.ServerStats -> List SS.Emote -> SS.Emote -> Html.Html msg
+emoteUsageLineChart serverStats emotes selectedEmote =
+    let
+        emoteCounts =
+            CES.calculateEmoteUsagePerDay serverStats selectedEmote
+
+        data =
+            emoteCounts
+                |> LU.addIndexToList
+                |> List.map (\( i, e ) -> { index = toFloat i, count = toFloat e.count })
+    in
+    C.chart
+        [ CA.width 1200
+        , CA.height 300
+        ]
+        [ C.yLabels []
+        , C.xLabels []
+        , C.legendsAt .max
+            .max
+            [ CA.column
+            , CA.moveLeft 15
+            , CA.alignRight
+            , CA.spacing 5
+            ]
+            []
+        , C.series .index
+            [ C.interpolated .count [ CA.width 4, CA.monotone ] [] |> C.named selectedEmote.name
             ]
             data
         ]
